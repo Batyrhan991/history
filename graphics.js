@@ -136,7 +136,6 @@ renderHall=function(){
  bust(280,364);bust(800,364);ropeBarrier(280,398,82);ropeBarrier(800,398,82);
  for(let d of doors){let active=d.id!=='final'||roomCount()===3;spotlightCone(d.x,118,140,150,active?'#ffe7a229':'#ffffff11');door(d.x,d.y,d.emoji,active);text(d.id==='final'?(state.lang==='ru'?'Финал':'Соңы'):data[d.id].title[ix()],d.x,d.y+75,d.id==='zheltoksan'?10:12,active?'#ffe2a5':'#b5b4bb')}
  px(471,353,138,7,'#e9d095');px(464,362,152,72,'#593f30');px(472,367,136,59,'#a1774a');px(483,375,114,42,'#224760');px(490,381,100,28,'#38788b');diamond(540,397,15,'#f2cd75');text('i',540,404,15,'#1b4960');
- drawCharacter(540,340,'receptionist',0,Math.sin(clock*2)*.2,3.0);
  museumLabel(540,446,120,state.lang==='ru'?'ИНФОРМАЦИЯ':'АҚПАРАТ');
  for(let x of [323,757]){trophy(x,238);spotlightCone(x,130,120,110,'#ffd76d22')}
  for(let i=0;i<14;i++)sparkleDot(110+i*67,92+((i*13)%7),'#ffffff18')
@@ -179,15 +178,12 @@ renderRoom=function(id){
    drawExhibitStand(p.x,p.y,id,i,finished);
    const glow=ctx.createRadialGradient(p.x,p.y-26,2,p.x,p.y-26,72);glow.addColorStop(0,finished?'#fbd67766':'#ffffff19');glow.addColorStop(1,'#ffffff00');ctx.fillStyle=glow;ctx.fillRect(p.x-76,p.y-92,152,130);
    ctx.restore();
-   text(e.emoji,p.x,p.y-24,30,'#fff2bb');
    if(finished){ellipse(p.x,p.y-25,68+Math.sin(clock*2)*2,46,'#f5ca5f14');diamond(p.x+52,p.y-44,7,'#ffe093')}
   }
   spotlightCone(npcPos.x,270,140,120,'#ffffff12');
-  drawCharacter(npcPos.x,npcPos.y,state.room==='khanate'?'asan':state.room==='alash'?'alikhan':'historian',0,Math.sin(clock*2)*.22,2.95);
   museumLabel(npcPos.x,npcPos.y+52,120,data[id].guide);
  }else{
   spotlightCone(540,290,150,140,'#ffe39922');
-  drawCharacter(540,520,'guide',0,Math.sin(clock*2)*.15,3.05);
   museumLabel(540,571,130,state.lang==='ru'?'ВИРТУАЛЬНЫЙ ГИД':'ВИРТУАЛДЫ ГИД');
  }
  door(540,688,'↩',final||answeredCount(id)===3);text(L().exit,540,748,12,'#ffdda1');
@@ -247,16 +243,28 @@ function exhibitArtHTML(room,index){
  return `<div class="exhibit-art-layout"><div class="exhibit-photo-frame"><img class="exhibit-photo" src="${exhibitImagePath(room,index)}" alt="${ex.title[ix()]}"><span class="photo-caption">${caption}</span></div><div class="exhibit-info"><span class="dialogue-tag">✦ ${state.lang==='ru'?'Экспонат зала':'Зал жәдігері'}</span><h2>${ex.title[ix()]}</h2><p class="dialogue-copy">${ex.desc[ix()]}</p></div></div>`
 }
 function showRoomIntro(room){
- const lore=ROOM_LORE[room]; if(!lore)return;
- openModal(`<div class="history-intro">${lore.badge[state.lang]}</div><h2>${lore.title[state.lang]}</h2><p>${lore.p1[state.lang]}</p><p>${lore.p2[state.lang]}</p><div class="dialogue-tip">${lore.tip[state.lang]}</div>${buttons([L().continue,'closeModal()',true])}`)
+ const lore=ROOM_LORE[room];
+ if(!lore||!data[room])return;
+ const ru=state.lang==='ru';
+ const name=escapeHTML(state.name|| (ru?'Гость':'Қонақ'));
+ const exhibits=data[room].ex;
+ const facts=exhibits.map((ex,i)=>`<li class="guide-exhibit-item"><span class="guide-item-number">${i+1}</span><div><strong>${escapeHTML(ex.title[ix()])}</strong><p>${escapeHTML(ex.desc[ix()])}</p></div></li>`).join('');
+ const speech=ru?`Привет, ${name}! Я ${escapeHTML(npcName(room))}. Сегодня я покажу тебе три важных экспоната нашего зала. Сначала познакомься с их историей, затем подойди к каждой витрине, и я задам тебе вопрос.`:`Сәлем, ${name}! Мен ${escapeHTML(npcName(room))}. Бүгін осы залдағы үш маңызды жәдігерді таныстырамын. Алдымен олардың тарихын оқы, содан кейін витриналарға жақында. Әр жәдігер бойынша сұрақ қоямын.`;
+ const instructions=ru?'Каждый ответ принимается только один раз. Перед выбором внимательно прочитай сведения об экспонатах.':'Әр сұраққа бір рет қана жауап беруге болады. Жауап таңдамас бұрын жәдігерлердің деректерін мұқият оқы.';
+ openModal(`<div class="museum-guide-intro"><div class="guide-header"><img class="guide-header-avatar" src="${npcPortraitPath(room)}" alt="${escapeHTML(npcName(room))}"><div><span class="dialogue-tag">${escapeHTML(lore.badge[state.lang])}</span><h2>${escapeHTML(npcName(room))}</h2><p class="guide-header-location">${escapeHTML(lore.title[state.lang])}</p></div></div><p class="guide-speech">${speech}</p><p class="guide-history">${escapeHTML(lore.p1[state.lang])}</p><div class="guide-exhibits-heading">${ru?'Знакомство с экспонатами':'Жәдігерлермен танысу'} · 3/3</div><ol class="guide-exhibit-list">${facts}</ol><div class="guide-instruction">${instructions}</div></div>${buttons([ru?'Начать осмотр →':'Зерттеуді бастау →','closeModal()',true])}`);
 }
 function showExhibit(room,index,msg=''){
- let ex=data[room].ex[index],result=getResult(room,index),answered=!!result,correct=!!(result&&result.correct),order=getQuizOrder(room,index),correctText=ex.opts[ix()][ex.answer];
- let status='';
- if(msg==='correct')status=`<p class="success">${L().correct}</p>`; else if(msg==='wrong')status=`<p class="error">${L().wrong}</p>`;
- if(answered){status+=correct?`<p class="success">✓ ${state.lang==='ru'?'Ответ принят. Экспонат восстановлен в цвете.':'Жауап қабылданды. Жәдігер түске енді.'}</p>`:`<p class="error">✕ ${state.lang==='ru'?'Ответ уже зафиксирован. Верный ответ:':'Жауап сақталды. Дұрыс жауап:'} <strong>${escapeHTML(correctText)}</strong></p>`}
- let choices=answered?buttons([L().close,'closeModal()',true]):order.map((optIndex,j)=>`<button class="choice" onclick="answerQuiz('${room}',${index},${optIndex})">${String.fromCharCode(65+j)}. ${escapeHTML(ex.opts[ix()][optIndex])}</button>`).join('')+buttons([L().close,'closeModal()']);
- openModal(`${exhibitArtHTML(room,index)}<div class="quiz-guide-box"><img class="quiz-guide-avatar" src="${npcPortraitPath(room)}" alt="${npcName(room)}"><div class="quiz-guide-content"><span class="dialogue-tag">✦ ${npcName(room)}</span><h3>${state.lang==='ru'?'Вопрос по экспонату':'Жәдігер бойынша сұрақ'}</h3><p class="dialogue-copy">${ex.q[ix()]}</p>${status}${choices}</div></div>`)
+ const ex=data[room]?.ex[index]; if(!ex)return;
+ const result=getResult(room,index),answered=!!result,correct=!!(result&&result.correct);
+ const order=getQuizOrder(room,index),ru=state.lang==='ru';
+ let resultHTML='';
+ if(answered){
+   resultHTML=correct
+     ? `<p class="quiz-result success">✓ ${ru?'Верно! Экспонат восстановлен в цвете.':'Дұрыс! Жәдігер түске енді.'}</p>`
+     : `<p class="quiz-result error">✕ ${ru?'Ответ зафиксирован. Правильный ответ:':'Жауап сақталды. Дұрыс жауап:'} <strong>${escapeHTML(ex.opts[ix()][ex.answer])}</strong></p>`;
+ }
+ const options=answered?'':order.map((optionIndex,position)=>`<button class="choice quiz-choice" onclick="answerQuiz('${room}',${index},${optionIndex})"><span class="option-badge">${String.fromCharCode(65+position)}</span><span>${escapeHTML(ex.opts[ix()][optionIndex])}</span></button>`).join('');
+ openModal(`<div class="exhibit-quiz-dialog"><div class="exhibit-quiz-title"><span class="exhibit-quiz-mark">✦</span><div><span class="dialogue-tag">${ru?'Экспонат':'Жәдігер'} ${index+1} / 3</span><h2>${escapeHTML(ex.title[ix()])}</h2></div></div><div class="quiz-npc-line"><img class="quiz-npc-portrait" src="${npcPortraitPath(room)}" alt="${escapeHTML(npcName(room))}"><div class="quiz-npc-speech"><strong>${escapeHTML(npcName(room))}</strong><p>${escapeHTML(ex.q[ix()])}</p></div></div>${resultHTML}${answered?'':`<div class="quiz-choice-note">${ru?'Выбери один ответ. Изменить его потом нельзя.':'Бір жауапты таңда. Кейін өзгертуге болмайды.'}</div><div class="quiz-options">${options}</div>`}</div>${buttons([answered?(ru?'Готово':'Дайын'):(ru?'Закрыть':'Жабу'),'closeModal()',answered])}`);
 }
 window.showExhibit=showExhibit
 const legacyInteract=interact;
@@ -264,8 +272,8 @@ interact=function(){
  if(modalOpen||fadeBusy)return;
  const o=nearest();
  if(o&&o.type==='npc'){
-   const d=data[state.room];beep(540,.09);
-   openModal(`${portraitHTML(state.room)}<p class="dialogue-copy">${d.intro[ix()].replace('{name}',escapeHTML(state.name||'Гость'))}</p><div class="dialogue-tip">${state.lang==='ru'?'Подойдите к трём витринам, изучите историю и ответьте на вопросы.':'Үш көрмені аралап, тарихын зерттеп, сұрақтарға жауап беріңіз.'}</div></div></div>${buttons([L().continue,'closeModal()',true])}`);
+   beep(540,.09);
+   showRoomIntro(state.room);
    return;
  }
  legacyInteract();
